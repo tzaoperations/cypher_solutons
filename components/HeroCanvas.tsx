@@ -36,7 +36,8 @@ function ParticleField({ color = "#a855f7", opacity = 0.65 }: { color?: string; 
   const pointsRef = useRef<THREE.Points>(null!);
   const { camera } = useThree();
 
-  const { restPositions, currentPositions, count } = useMemo(() => {
+  const dataRef = useRef<{ restPositions: Float32Array; currentPositions: Float32Array; count: number } | null>(null);
+  if (!dataRef.current) {
     const count = COLS * ROWS;
     const rest = new Float32Array(count * 3);
     const current = new Float32Array(count * 3);
@@ -55,14 +56,17 @@ function ParticleField({ color = "#a855f7", opacity = 0.65 }: { color?: string; 
         i++;
       }
     }
-    return { restPositions: rest, currentPositions: current, count };
-  }, []);
+    dataRef.current = { restPositions: rest, currentPositions: current, count };
+  }
+  const { restPositions, currentPositions, count } = dataRef.current;
 
-  const geometry = useMemo(() => {
+  const geoRef = useRef<THREE.BufferGeometry | null>(null);
+  if (!geoRef.current) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(currentPositions, 3));
-    return geo;
-  }, [currentPositions]);
+    geoRef.current = geo;
+  }
+  const geometry = geoRef.current;
 
   const worldMouse = useMemo(() => new THREE.Vector3(), []);
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
